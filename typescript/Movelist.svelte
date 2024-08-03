@@ -28,7 +28,6 @@
 
 		responseMoveNumber = task.currentMoveNumber;
 		responseColor = task.currentColor;
-		console.log(responseColor);
 
 		const chess = task.chess;
 
@@ -99,11 +98,9 @@
 
 		for (let i = 0; i < task.line.responses.length; ++i) {
 			const response = task.line.responses[i];
-			console.log(response);
 			const entry = createMove(responseMoveNumber);
 
 			const move = task.chess.move(response.move);
-			console.log(move);
 			if (responseColor === BLACK) {
 				entry.black = getSAN(move);
 			} else {

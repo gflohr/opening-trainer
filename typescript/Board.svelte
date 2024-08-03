@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { ChessgroundUnstyled as Chessground } from 'svelte-chessground';
 	import type { Config as ChessgroundConfig } from 'chessground/config';
 	import { configuration, chessTask } from './store';
 	import { ChessTask } from './chess-task';
 
+	let chessground: Chessground;
 	let classes: Array<string> = ['loading'];
 	let config: ChessgroundConfig = {};
 
@@ -33,6 +34,16 @@
 		config = task.chessgroundConfig;
 	}
 
+	onMount(async () => {
+		chessground.set( {
+			movable: {
+				events: {
+					after: task.moveHandler(),
+				}
+			},
+		});
+	});
+
 	onDestroy(() => {
 		unsubscribeConfiguration();
 		unsubscribeChessTask();
@@ -40,7 +51,7 @@
 </script>
 
 <chess-board class={classes.join(' ')}>
-	<Chessground {config} />
+	<Chessground bind:this={chessground} {config} />
 </chess-board>
 
 <style lang="scss">

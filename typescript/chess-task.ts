@@ -1,4 +1,4 @@
-import { Chess, type Color, type Square, SQUARES, BLACK, WHITE } from 'chess.js';
+import { Chess, type Color, type Square, type Move, SQUARES, BLACK, WHITE } from 'chess.js';
 import { type Config as ChessgroundConfig } from 'chessground/config';
 import { chessTask } from './store';
 
@@ -6,13 +6,17 @@ type LineMove = {
 	move: string;
 	comments: Array<string>;
 	nag: number;
-};
+}
 
 type Line = {
 	fen: string;
 	game_comments: Array<string>;
 	moves: Array<LineMove>;
 	responses: Array<LineMove>;
+};
+
+type Attempt = LineMove & {
+	correct: boolean;
 };
 
 export class ChessTask {
@@ -23,6 +27,7 @@ export class ChessTask {
 	private _currentMoveNumber: number = 1;
 	private _currentColor: Color = WHITE;
 	private _config: ChessgroundConfig;
+	private readonly attempts: Array<Attempt> = [];
 
 	constructor(config: ChessgroundConfig) {
 		this._config = config;
@@ -129,5 +134,33 @@ export class ChessTask {
 		} else {
 			movable.color = 'white';
 		}
+	}
+
+	public moveHandler(): (from: string, to: string) => void {
+		return (from: string, to: string) => {
+			const move = from + to;
+
+			for (const attempt of this.attempts) {
+				if (attempt.move === move) return;
+			}
+
+			const attempt: Attempt = {
+				move,
+				comments: [],
+				nag: 0,
+				correct: false.
+			};
+			this.attempts.push(attempt);
+
+			for (const response of this._line.responses) {
+				if (response.move === move) {
+					attempt.correct = true;
+					attempt.comments.push(...response.comments);
+					attempt.nag = response.nag;
+				}
+
+				break;
+			}
+		};
 	}
 }
