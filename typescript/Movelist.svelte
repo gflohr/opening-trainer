@@ -8,6 +8,7 @@
 		moveNumber: number;
 		white: string;
 		black: string;
+		answerClass?: string;
 	};
 
 	type ChessMove = Move & {
@@ -15,7 +16,7 @@
 	};
 
 	let moves: Array<MovelistMove | string> = [];
-	let responses: Array<MovelistMove | string> = [];
+	let attempts: Array<MovelistMove | string> = [];
 	let task: ChessTask;
 	let responseMoveNumber: number;
 	let responseColor: Color;
@@ -39,7 +40,7 @@
 		}
 
 		moves = fillMoves(task, history);
-		responses = fillResponses(task);
+		attempts = fillAttempts(task);
 	});
 
 	function fillMoves(task: ChessTask, history: Array<ChessMove>): Array<MovelistMove | string> {
@@ -93,23 +94,31 @@
 		return moves;
 	}
 
-	function fillResponses(task: ChessTask): Array<MovelistMove | string> {
+	function fillAttempts(task: ChessTask): Array<MovelistMove | string> {
 		const entries: Array<MovelistMove | string> = [];
 
-		for (let i = 0; i < task.line.responses.length; ++i) {
-			const response = task.line.responses[i];
+		for (let i = 0; i < task.attempts.length; ++i) {
+			const attempt = task.attempts[i];
 			const entry = createMove(responseMoveNumber);
 
-			const move = task.chess.move(response.move);
-			if (responseColor === BLACK) {
-				entry.black = getSAN(move);
-			} else {
-				entry.white = getSAN(move);
+			if (typeof attempt.move !== 'undefined') {
+				const move = task.chess.move(attempt.move);
+				if (responseColor === BLACK) {
+					entry.black = getSAN(move);
+				} else {
+					entry.white = getSAN(move);
+				}
+				task.chess.undo();
+
+				if (attempt.correct) {
+					entry.answerClass = 'right';
+				} else {
+					entry.answerClass = 'wrong';
+				}
 			}
-			task.chess.undo();
 			entries.push(entry);
 
-			const comments = response.comments.join('\n');
+			const comments = attempt.comments.join('\n');
 			if (comments.length) {
 				entries.push(comments);
 			}
@@ -170,18 +179,18 @@
 			</chess-move>
 		{/if}
 	{/each}
-	{#each responses as entry}
+	{#each attempts as entry}
 		{#if typeof entry === 'string'}
 		<chess-comment>{entry}</chess-comment>
 		{:else}
 		<chess-move>
 			<chess-move-number class="answer">{responseMoveNumber}</chess-move-number>
 			{#if responseColor === WHITE}
-			<chess-move-white class="answer-right">{entry.white}</chess-move-white>
-			<chess-move-black class="answer-right ellipsis"><i class="bi-check-lg"></i></chess-move-black>
+			<chess-move-white class="answer-{entry.answerClass}">{entry.white}</chess-move-white>
+			<chess-move-black class="answer-{entry.answerClass} ellipsis"><i class="bi-check-lg"></i></chess-move-black>
 			{:else}
-			<chess-move-white class="answer-right ellipsis"><i class="bi-check-lg"></i></chess-move-white>
-			<chess-move-black class="answer-right"><san>{entry.black}</san></chess-move-black>
+			<chess-move-white class="answer-{entry.answerClass} ellipsis"><i class="bi-check-lg"></i></chess-move-white>
+			<chess-move-black class="answer-{entry.answerClass}"><san>{entry.black}</san></chess-move-black>
 			{/if}
 		</chess-move>
 		{/if}
@@ -287,5 +296,9 @@
 
 	.answer-wrong {
 		color: rgb(172, 38, 38);
+	}
+
+	.answer-empty {
+		color: $black-font-color;
 	}
 </style>

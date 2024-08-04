@@ -15,8 +15,9 @@ type Line = {
 	responses: Array<LineMove>;
 };
 
-type Attempt = LineMove & {
-	correct: boolean;
+export type Attempt = LineMove & {
+	move?: string;
+	correct?: boolean;
 };
 
 export class ChessTask {
@@ -27,7 +28,7 @@ export class ChessTask {
 	private _currentMoveNumber: number = 1;
 	private _currentColor: Color = WHITE;
 	private _config: ChessgroundConfig;
-	private readonly attempts: Array<Attempt> = [];
+	private readonly _attempts: Array<Attempt | string> = [];
 
 	constructor(config: ChessgroundConfig) {
 		this._config = config;
@@ -75,6 +76,10 @@ export class ChessTask {
 
 	get gameComments(): string {
 		return this._line.game_comments.join('\n');
+	}
+
+	get attempts(): Array<Attempt> {
+		return this._attempts;
 	}
 
 	private toDests(): Map<Square, Array<Square>> {
@@ -140,27 +145,30 @@ export class ChessTask {
 		return (from: string, to: string) => {
 			const move = from + to;
 
-			for (const attempt of this.attempts) {
-				if (attempt.move === move) return;
+			for (const attempt of this._attempts) {
+				if (typeof attempt !== 'string') {
+					if (attempt.move === move) return;
+				}
 			}
 
 			const attempt: Attempt = {
 				move,
 				comments: [],
 				nag: 0,
-				correct: false.
+				correct: false,
 			};
-			this.attempts.push(attempt);
+			this._attempts.push(attempt);
 
 			for (const response of this._line.responses) {
 				if (response.move === move) {
 					attempt.correct = true;
 					attempt.comments.push(...response.comments);
 					attempt.nag = response.nag;
+					break;
 				}
-
-				break;
 			}
+
+			chessTask.set(this);
 		};
 	}
 }
