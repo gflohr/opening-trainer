@@ -101,7 +101,7 @@
 			const attempt = task.attempts[i];
 			const entry = createMove(responseMoveNumber);
 
-			if (typeof attempt.move !== 'undefined') {
+			if (typeof attempt !== 'string' && attempt.move !== '') {
 				const move = task.chess.move(attempt.move);
 				if (responseColor === BLACK) {
 					entry.black = getSAN(move);
@@ -118,9 +118,11 @@
 			}
 			entries.push(entry);
 
-			const comments = attempt.comments.join('\n');
-			if (comments.length) {
-				entries.push(comments);
+			if (typeof attempt !== 'string') {
+				const comments = attempt.comments.join('\n');
+				if (comments.length) {
+					entries.push(comments);
+				}
 			}
 		}
 
