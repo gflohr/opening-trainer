@@ -212,7 +212,9 @@ export class ChessTask {
 		return (from: string, to: string) => {
 			const move = from + to;
 			this._chess.move(move);
+			this.cg.move(from as Key, to as Key);
 			this._chess.undo();
+			this.cg.cancelMove();
 			this.cg.set(this._chessgroundConfig);
 			if (this._chess.turn() === WHITE) {
 				this.cg.getState().turnColor = 'white';

@@ -9,6 +9,7 @@
 		white: string;
 		black: string;
 		answerClass?: string;
+		answerChar?: string;
 	};
 
 	type ChessMove = Move & {
@@ -103,24 +104,28 @@
 			const attempt = task.attempts[i];
 			const entry = createMove(responseMoveNumber);
 
-			if (typeof attempt !== 'string' && attempt.move !== '') {
-				const move = task.chess.move(attempt.move);
-				if (responseColor === BLACK) {
-					entry.black = getSAN(move);
-				} else {
-					entry.white = getSAN(move);
-				}
-				task.chess.undo();
-
-				if (attempt.correct) {
-					entry.answerClass = 'right';
-				} else {
-					entry.answerClass = 'wrong';
-				}
-			}
-			entries.push(entry);
-
 			if (typeof attempt !== 'string') {
+				if (attempt.move !== '') {
+					const move = task.chess.move(attempt.move);
+					if (responseColor === BLACK) {
+						entry.black = getSAN(move);
+					} else {
+						entry.white = getSAN(move);
+					}
+					task.chess.undo();
+
+					if (attempt.correct) {
+						entry.answerClass = 'right';
+						entry.answerChar = 'check';
+					} else {
+						entry.answerClass = 'wrong';
+						entry.answerChar = 'x';
+					}
+				} else {
+					entry.answerChar = 'question';
+				}
+				entries.push(entry);
+
 				const comments = attempt.comments.join('\n');
 				if (comments.length) {
 					entries.push(comments);
@@ -191,9 +196,9 @@
 			<chess-move-number class="answer">{responseMoveNumber}</chess-move-number>
 			{#if responseColor === WHITE}
 			<chess-move-white class="answer-{entry.answerClass}">{entry.white}</chess-move-white>
-			<chess-move-black class="answer-{entry.answerClass} ellipsis"><i class="bi-check-lg"></i></chess-move-black>
+			<chess-move-black class="answer-{entry.answerClass} ellipsis"><i class="bi-{entry.answerChar}-lg"></i></chess-move-black>
 			{:else}
-			<chess-move-white class="answer-{entry.answerClass} ellipsis"><i class="bi-check-lg"></i></chess-move-white>
+			<chess-move-white class="answer-{entry.answerClass} ellipsis"><i class="bi-{entry.answerChar}-lg"></i></chess-move-white>
 			<chess-move-black class="answer-{entry.answerClass}"><san>{entry.black}</san></chess-move-black>
 			{/if}
 		</chess-move>
