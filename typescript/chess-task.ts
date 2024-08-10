@@ -57,8 +57,6 @@ export class ChessTask {
 		}
 
 		configuration.subscribe(config => this.onConfig(config));
-
-		this.updateState(false);
 	}
 
 	get chess(): Chess {
@@ -110,6 +108,8 @@ export class ChessTask {
 				nag: 0,
 			});
 		}
+
+		this.updateState();
 	}
 
 	private toDests(): Map<Square, Array<Square>> {
@@ -123,16 +123,14 @@ export class ChessTask {
 		return dests;
 	}
 
-	private updateState(doSet: boolean) {
+	private updateState() {
 		this._chessgroundConfig.fen = this._chess.fen();
 
 		this.updateMoveNumberAndColor();
 		this.updateLastMove();
 		this.updateMovable();
 
-		if (doSet) {
-			chessTask.set(this);
-		}
+		chessTask.set(this);
 	}
 
 	private updateMoveNumberAndColor() {
@@ -250,7 +248,7 @@ export class ChessTask {
 				slot.correct = correct;
 			}
 
-			this.updateState(true);
+			this.updateState();
 		};
 	}
 }
