@@ -170,8 +170,8 @@ export class ChessTask {
 		this._chessgroundConfig.movable = {};
 		const movable = this._chessgroundConfig.movable;
 
-		if (!this.showNumberOfAnswers || this.solved()) {
-			movable.free = false;
+		if (this.solved()) {
+			this._chessgroundConfig.viewOnly = true;
 		} else {
 			movable.free = true;
 			if (this._chess.turn() === BLACK) {
@@ -184,9 +184,6 @@ export class ChessTask {
 			movable.events = {
 				after: this.moveHandler(),
 			};
-
-			// TODO: Undo move with animation.
-			// TODO: Play sound.
 		}
 	}
 
@@ -253,8 +250,6 @@ export class ChessTask {
 				slot.correct = correct;
 			}
 
-			// FIXME! Only do this, if the move is not correct, or if there
-			// are more correct moves.
 			this.updateState(true);
 		};
 	}
