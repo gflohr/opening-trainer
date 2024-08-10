@@ -25,6 +25,8 @@
 	const side = appElement.dataset.side;
 
 	const unsubscribeChessTask = chessTask.subscribe(t => {
+		if (!t) return;
+
 		task = t;
 
 		responseMoveNumber = task.currentMoveNumber;

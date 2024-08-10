@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { ChessgroundUnstyled as Chessground } from 'svelte-chessground';
 	import type { Config as ChessgroundConfig } from 'chessground/config';
 	import { configuration, chessTask } from './store';
@@ -26,22 +26,26 @@
 	});
 
 	let task: ChessTask;
-	const unsubscribeChessTask= chessTask.subscribe(t => {
-		task = t;
+	const unsubscribeChessTask = chessTask.subscribe(t => {
+		if (t) {
+			task = t;
+			console.log(chessground);
+		}
 	});
 
 	$: if (task) {
 		config = task.chessgroundConfig;
 	}
 
-	onMount(async () => {
-		chessground.set( {
-			movable: {
-				events: {
-					after: task.moveHandler(),
-				}
-			},
-		});
+	onMount(() => {
+		const params = new URLSearchParams(document.location.search);
+		const configMode = params.has('configure');
+		const chessgroundConfig: ChessgroundConfig = {
+			addPieceZIndex: true,
+			viewOnly: configMode,
+		}
+
+		chessTask.set(new ChessTask(chessgroundConfig));
 	});
 
 	onDestroy(() => {

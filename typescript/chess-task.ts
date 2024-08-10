@@ -126,6 +126,7 @@ export class ChessTask {
 		this.updateMoveNumberAndColor();
 		this.updateLastMove();
 		this.updateMovable();
+		console.log(this._chessgroundConfig);
 		if (doSet) {
 			chessTask.set(this);
 		}
@@ -155,22 +156,64 @@ export class ChessTask {
 	}
 
 	private updateMovable() {
+		if (this.side === 'question') {
+			this.updateMovableQuestion();
+		} else {
+			this.updateMovableAnswer();
+		}
+	}
+
+	private updateMovableQuestion() {
+		this._chessgroundConfig.movable = {};
+		const movable = this._chessgroundConfig.movable;
+
+		if (!this.showNumberOfAnswers || this.solved()) {
+			movable.free = false;
+		} else {
+			movable.free = true;
+			if (this._chess.turn() === BLACK) {
+				movable.color = 'black';
+			} else {
+				movable.color = 'white';
+			}
+
+			movable.dests = this.toDests();
+			movable.events = {
+				after: this.moveHandler(),
+			};
+
+			// TODO: Undo move with animation.
+			// TODO: Play sound.
+		}
+	}
+
+	private updateMovableAnswer() {
 		this._chessgroundConfig.movable = {};
 		const movable = this._chessgroundConfig.movable
 
 		movable.free = false;
-		movable.dests = this.toDests();
+	}
 
-		if (this._chess.turn() === BLACK) {
-			movable.color = 'black';
-		} else {
-			movable.color = 'white';
-		}
+	private solved(): boolean {
+		const wanted = this._line.responses.length;
+		let got = 0;
+
+		this._attempts.forEach(a => {
+			if (typeof a !== 'string' && a.correct) ++got;
+		});
+
+		return wanted === got;
 	}
 
 	public moveHandler(): (from: string, to: string) => void {
 		return (from: string, to: string) => {
 			const move = from + to;
+			try {
+				this._chess.move(move);
+				this._chess.undo();
+			} catch(e) {
+				return;
+			}
 
 			for (const attempt of this._attempts) {
 				if (typeof attempt !== 'string') {
@@ -203,7 +246,7 @@ export class ChessTask {
 				slot.correct = correct;
 			}
 
-			chessTask.set(this);
+			this.updateState(true);
 		};
 	}
 }
