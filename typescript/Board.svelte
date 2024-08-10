@@ -29,7 +29,6 @@
 	const unsubscribeChessTask = chessTask.subscribe(t => {
 		if (t) {
 			task = t;
-			console.log(chessground);
 		}
 	});
 
@@ -45,7 +44,7 @@
 			viewOnly: configMode,
 		}
 
-		chessTask.set(new ChessTask(chessgroundConfig));
+		chessTask.set(new ChessTask(chessground, chessgroundConfig));
 	});
 
 	onDestroy(() => {

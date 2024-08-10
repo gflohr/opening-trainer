@@ -1,5 +1,6 @@
 import { Chess, type Color, type Square, SQUARES, BLACK, WHITE } from 'chess.js';
 import { type Config as ChessgroundConfig } from 'chessground/config';
+import { Chessground } from 'svelte-chessground';
 import { chessTask, configuration } from './store';
 import type { Config } from './config';
 
@@ -28,6 +29,7 @@ export class ChessTask {
 	private readonly _firstColor: Color = WHITE;
 	private _currentMoveNumber: number = 1;
 	private _currentColor: Color = WHITE;
+	private cg: Chessground;
 	private _chessgroundConfig: ChessgroundConfig;
 	private side: 'question' | 'answer' = 'question';
 	private showNumberOfAnswers = true;
@@ -39,7 +41,8 @@ export class ChessTask {
 		},
 	];
 
-	constructor(config: ChessgroundConfig) {
+	constructor(chessground: Chessground, config: ChessgroundConfig) {
+		this.cg = chessground;
 		this._chessgroundConfig = config;
 		const appElement = document.getElementById('app');
 		this._line = JSON.parse(appElement?.dataset.line as string) as Line;
@@ -126,7 +129,7 @@ export class ChessTask {
 		this.updateMoveNumberAndColor();
 		this.updateLastMove();
 		this.updateMovable();
-		console.log(this._chessgroundConfig);
+
 		if (doSet) {
 			chessTask.set(this);
 		}
@@ -208,11 +211,13 @@ export class ChessTask {
 	public moveHandler(): (from: string, to: string) => void {
 		return (from: string, to: string) => {
 			const move = from + to;
-			try {
-				this._chess.move(move);
-				this._chess.undo();
-			} catch(e) {
-				return;
+			this._chess.move(move);
+			this._chess.undo();
+			this.cg.set(this._chessgroundConfig);
+			if (this._chess.turn() === WHITE) {
+				this.cg.getState().turnColor = 'white';
+			} else {
+				this.cg.getState().turnColor = 'black';
 			}
 
 			for (const attempt of this._attempts) {
@@ -246,6 +251,8 @@ export class ChessTask {
 				slot.correct = correct;
 			}
 
+			// FIXME! Only do this, if the move is not correct, or if there
+			// are more correct moves.
 			this.updateState(true);
 		};
 	}
